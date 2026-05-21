@@ -1,2 +1,10 @@
 # Node
 node_modules/
+
+# Cypress
+cypress.env.json
+
+# Allure
+allure-results/
+allure-report/
+screenshots/
