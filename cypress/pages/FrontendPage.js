@@ -38,6 +38,10 @@ class FrontendPage {
     cy.wait('@produtos').its('response.statusCode').should('eq', 200)
   }
 
+  validarValueGrid(linha, coluna, valor) {
+    cy.get(`p[class="row"] table tbody tr:nth-child(${linha}) td:nth-child(${coluna})`).should('have.text', valor)
+  }
+
   validarListaProdutos() {
     cy.get(loc.listaProdutos.titulo).should('contain.text', 'Lista dos Produtos')
     cy.get(loc.listaProdutos.linhas).should('have.length.greaterThan', 0)
