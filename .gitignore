@@ -8,3 +8,6 @@ cypress.env.json
 allure-results/
 allure-report/
 screenshots/
+
+# Claude Code
+.claude/
