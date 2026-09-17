@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "allure-commandline": "^2.41.0",
-    "allure-cypress": "^3.9.0",
-    "cypress": "^13.17.0"
+    "allure-cypress": "^3.10.2",
+    "cypress": "^15.21.0"
   }
 }

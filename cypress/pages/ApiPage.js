@@ -1,9 +1,12 @@
 const loc = require('../locators/ApiLocator')
 
 class ApiPage {
-  // Realiza login na API e retorna a resposta com o token de autorização
-  // @param {string} email - E-mail do usuário
-  // @param {string} password - Senha do usuário
+  /**
+   * Autentica um usuário.
+   * @param {string} email
+   * @param {string} password
+   * @returns {Cypress.Chainable<Cypress.Response>} POST /login
+   */
   login(email, password) {
     return cy.request({
       method: 'POST',
@@ -13,34 +16,51 @@ class ApiPage {
     })
   }
 
-  // Cria um novo usuário na API
-  // @param {string} nome - Nome completo do usuário
-  // @param {string} email - E-mail do usuário
-  // @param {string} password - Senha do usuário
-  // @param {string} administrador - Define se é admin ('true' ou 'false', padrão 'false')
-  criarUsuario(nome, email, password, administrador = 'false') {
+  /**
+   * Cadastra um usuário.
+   * @param {{nome: string, email: string, password: string, administrador: string}} usuario
+   * @returns {Cypress.Chainable<Cypress.Response>} POST /usuarios
+   */
+  criarUsuario(usuario) {
     return cy.request({
       method: 'POST',
       url: `${loc.baseUrl}${loc.endpoints.usuarios}`,
-      body: { nome, email, password, administrador },
+      body: usuario,
       failOnStatusCode: false,
     })
   }
 
-  // Cria um novo produto na API (requer token de administrador)
-  // @param {string} nome - Nome do produto
-  // @param {number} preco - Preço do produto
-  // @param {string} descricao - Descrição do produto
-  // @param {number} quantidade - Quantidade em estoque
-  // @param {string} token - Token de autorização Bearer do administrador
-  criarProduto(nome, preco, descricao, quantidade, token) {
+  /**
+   * Cadastra um produto.
+   * @param {{nome: string, preco: number, descricao: string, quantidade: number}} produto
+   * @param {string} [token] Authorization no formato "Bearer <jwt>"
+   * @returns {Cypress.Chainable<Cypress.Response>} POST /produtos
+   */
+  criarProduto(produto, token) {
     return cy.request({
       method: 'POST',
       url: `${loc.baseUrl}${loc.endpoints.produtos}`,
-      headers: { Authorization: token },
-      body: { nome, preco, descricao, quantidade },
+      headers: token ? { Authorization: token } : {},
+      body: produto,
       failOnStatusCode: false,
     })
+  }
+
+  /**
+   * Cadastra um usuário e devolve o token de autenticação dele.
+   * @param {{nome: string, email: string, password: string, administrador: string}} usuario
+   * @returns {Cypress.Chainable<string>} Authorization no formato "Bearer <jwt>"
+   */
+  criarUsuarioAutenticado(usuario) {
+    return this.criarUsuario(usuario)
+      .then((cadastro) => {
+        expect(cadastro.status, 'usuario cadastrado').to.eq(201)
+        return this.login(usuario.email, usuario.password)
+      })
+      .then((autenticacao) => {
+        expect(autenticacao.status, 'usuario autenticado').to.eq(200)
+        return autenticacao.body.authorization
+      })
   }
 }
 

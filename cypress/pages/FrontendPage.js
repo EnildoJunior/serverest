@@ -1,73 +1,109 @@
 const loc = require('../locators/FrontendLocator')
 
 class FrontendPage {
-  // Preenche os campos de email e senha na tela de login
-  // @param {string} email - E-mail do usuário
-  // @param {string} senha - Senha do usuário
-  preencherLogin(email, senha) {
-    cy.get(loc.login.email).type(email)
-    cy.get(loc.login.senha).type(senha)
+  /** Abre a página de login. */
+  acessarLogin() {
+    cy.visit(loc.urls.login)
   }
 
-  // Clica no botão Entrar e aguarda o retorno da lista de usuários (GET /usuarios 200)
-  clicarEntrar() {
-    cy.intercept('GET', 'https://serverest.dev/usuarios').as('usuarios')
+  /** Abre a página de cadastro de usuário. */
+  acessarCadastro() {
+    cy.visit(loc.urls.cadastro)
+  }
+
+  /** Abre a home do administrador. */
+  acessarHomeAdmin() {
+    cy.visit(loc.urls.homeAdmin)
+  }
+
+  /**
+   * Preenche e submete o formulário de login.
+   * @param {string} email
+   * @param {string} senha
+   * @returns {Cypress.Chainable} interceptação de POST /login
+   */
+  autenticar(email, senha) {
+    cy.intercept('POST', '**/login').as('login')
+    cy.get(loc.login.email).clear().type(email)
+    cy.get(loc.login.senha).clear().type(senha, { log: false })
     cy.get(loc.login.btnEntrar).click()
-    cy.wait('@usuarios')
+    return cy.wait('@login')
   }
 
-  // Valida que o título de boas-vindas está visível na home
-  validarBemVindo() {
-    cy.get(loc.home.tituloBemVindo).should('be.visible')
-  }
-
-  // Preenche os campos do formulário de cadastro de usuário
-  // @param {string} nome - Nome completo do usuário
-  // @param {string} email - E-mail do usuário
-  // @param {string} password - Senha do usuário
-  preencherCadastro(nome, email, password) {
-    cy.get(loc.cadastro.nome).type(nome)
-    cy.get(loc.cadastro.email).type(email)
-    cy.get(loc.cadastro.password).type(password)
-  }
-
-  // Clica no botão Cadastrar e aguarda o retorno da lista de produtos (GET /produtos 200)
-  clicarCadastrar() {
-    cy.intercept('GET', 'https://serverest.dev/produtos').as('paginaLogin')
+  /**
+   * Preenche e submete o formulário de cadastro.
+   * @param {string} nome
+   * @param {string} email
+   * @param {string} senha
+   * @returns {Cypress.Chainable} interceptação de POST /usuarios
+   */
+  cadastrar(nome, email, senha) {
+    cy.intercept('POST', '**/usuarios').as('cadastro')
+    cy.get(loc.cadastro.nome).clear().type(nome)
+    cy.get(loc.cadastro.email).clear().type(email)
+    cy.get(loc.cadastro.password).clear().type(senha, { log: false })
     cy.get(loc.cadastro.btnCadastrar).click()
-    cy.wait('@paginaLogin').its('response.statusCode').should('eq', 200)
+    return cy.wait('@cadastro')
   }
 
-  // Valida que o texto "Bem Vindo" está presente no título da home
-  verificarProdutosVisiveis() {
-    cy.get(loc.home.tituloBemVindo).should('contain.text', 'Bem Vindo')
-  }
-
-  // Clica no botão Listar Produtos e aguarda o retorno da API (GET /produtos 200)
-  clicarListarProdutos() {
-    cy.intercept('GET', 'https://serverest.dev/produtos').as('produtos')
-    cy.get(loc.home.buttonListarProdutos).click()
+  /** Abre a listagem de produtos pelo menu e aguarda o carregamento dos dados. */
+  irParaListarProdutos() {
+    cy.intercept('GET', '**/produtos').as('produtos')
+    cy.get(loc.homeAdmin.linkListarProdutos).click()
     cy.wait('@produtos').its('response.statusCode').should('eq', 200)
   }
 
-  // Valida o valor de uma célula específica da tabela de produtos
-  // @param {number} linha - Índice da linha (nth-child, começa em 1)
-  // @param {number} coluna - Índice da coluna (nth-child, começa em 1)
-  // @param {string} valor - Texto esperado na célula
-  validarValueGrid(linha, coluna, valor) {
-    cy.get(`p[class="row"] table tbody tr:nth-child(${linha}) td:nth-child(${coluna})`).should('have.text', valor)
+  /**
+   * Valida a home do administrador.
+   * @param {string} nome nome cadastrado do usuário autenticado
+   */
+  validarHomeAdmin(nome) {
+    cy.url().should('include', loc.urls.homeAdmin)
+    cy.get(loc.homeAdmin.titulo).should('contain.text', 'Bem Vindo').and('contain.text', nome)
   }
 
-  // Valida o título da página, a existência de linhas e que nome e preço estão preenchidos
-  validarListaProdutos() {
+  /** Valida a home do cliente. */
+  validarHomeCliente() {
+    cy.url().should('include', loc.urls.homeCliente)
+    cy.get(loc.homeCliente.titulo).should('contain.text', 'Serverest Store')
+  }
+
+  /** Valida que a página exibida é a de login. */
+  validarPaginaLogin() {
+    cy.url().should('include', loc.urls.login)
+  }
+
+  /** Valida que a página exibida é a de cadastro. */
+  validarPaginaCadastro() {
+    cy.url().should('include', loc.urls.cadastro)
+  }
+
+  /**
+   * Valida o alerta exibido pela aplicação.
+   * @param {string} mensagem trecho esperado no alerta
+   */
+  validarAlerta(mensagem) {
+    cy.get(loc.alerta).should('be.visible').and('contain.text', mensagem)
+  }
+
+  /** Valida que toda linha da listagem exibe nome e preço preenchidos. */
+  validarListaProdutosPreenchida() {
     cy.get(loc.listaProdutos.titulo).should('contain.text', 'Lista dos Produtos')
     cy.get(loc.listaProdutos.linhas).should('have.length.greaterThan', 0)
-    cy.get(loc.listaProdutos.colunaNome).each(($cel) => {
-      cy.wrap($cel).should('not.be.empty')
+    cy.get(loc.listaProdutos.colunaNome).each((celula) => {
+      cy.wrap(celula).invoke('text').should('not.be.empty')
     })
-    cy.get(loc.listaProdutos.colunaPreco).each(($cel) => {
-      cy.wrap($cel).should('not.be.empty')
+    cy.get(loc.listaProdutos.colunaPreco).each((celula) => {
+      cy.wrap(celula).invoke('text').should('not.be.empty')
     })
+  }
+
+  /**
+   * Valida que um produto aparece na listagem, sem depender de posição.
+   * @param {string} nomeProduto
+   */
+  validarProdutoNaLista(nomeProduto) {
+    cy.get(loc.listaProdutos.tabela).should('contain.text', nomeProduto)
   }
 }
 

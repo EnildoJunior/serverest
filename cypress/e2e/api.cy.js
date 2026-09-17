@@ -1,45 +1,38 @@
 const ApiPage = require('../pages/ApiPage')
+const usuario = require('../support/factories/usuario')
+const produto = require('../support/factories/produto')
 
-const ts = Date.now()
-
-describe('Testes de API ServeRest', () => {
+describe('API ServeRest', () => {
   it('Realizar login com credenciais válidas', () => {
-    const email = `apLogin${ts}@qa.com`
-    const password = 'teste123'
+    const cliente = usuario.valido()
 
-    ApiPage.criarUsuario(`Login User ${ts}`, email, password).then(() => {
-      ApiPage.login(email, password).then((response) => {
-        expect(response.status).to.eq(200)
-        expect(response.body).to.have.property('authorization')
-        expect(response.body.authorization).to.include('Bearer')
-        expect(response.body.message).to.eq('Login realizado com sucesso')
-      })
+    ApiPage.criarUsuario(cliente)
+    ApiPage.login(cliente.email, cliente.password).then((resposta) => {
+      expect(resposta.status).to.eq(200)
+      expect(resposta.body.message).to.eq('Login realizado com sucesso')
+      expect(resposta.body.authorization).to.include('Bearer')
     })
   })
 
   it('Cadastrar um novo usuário', () => {
-    const email = `apUser${ts}@qa.com`
+    const novo = usuario.valido()
 
-    ApiPage.criarUsuario(`Novo User ${ts}`, email, 'teste123').then((response) => {
-      expect(response.status).to.eq(201)
-      expect(response.body).to.have.property('_id')
-      expect(response.body.message).to.eq('Cadastro realizado com sucesso')
+    ApiPage.criarUsuario(novo).then((resposta) => {
+      expect(resposta.status).to.eq(201)
+      expect(resposta.body.message).to.eq('Cadastro realizado com sucesso')
+      expect(resposta.body).to.have.property('_id')
     })
   })
 
   it('Cadastrar um produto como administrador', () => {
-    const adminEmail = `apAdmin${ts}@qa.com`
-    const password = 'teste123'
+    const admin = usuario.admin()
+    const novoProduto = produto.valido()
 
-    ApiPage.criarUsuario(`API Admin ${ts}`, adminEmail, password, 'true').then(() => {
-      ApiPage.login(adminEmail, password).then((loginRes) => {
-        const token = loginRes.body.authorization
-
-        ApiPage.criarProduto(`Produto API ${ts}`, 999, 'Produto cadastrado via API', 5, token).then((response) => {
-          expect(response.status).to.eq(201)
-          expect(response.body).to.have.property('_id')
-          expect(response.body.message).to.eq('Cadastro realizado com sucesso')
-        })
+    ApiPage.criarUsuarioAutenticado(admin).then((token) => {
+      ApiPage.criarProduto(novoProduto, token).then((resposta) => {
+        expect(resposta.status).to.eq(201)
+        expect(resposta.body.message).to.eq('Cadastro realizado com sucesso')
+        expect(resposta.body).to.have.property('_id')
       })
     })
   })

@@ -1,10 +1,21 @@
-# Node
+# Dependências
 node_modules/
 
-# Cypress
+# Configuração local do Cypress.
+# Nunca versionado: é o arquivo destinado a credenciais e a ajustes de ambiente.
 cypress.env.json
 
-# Allure
+# Artefatos gerados pela execução dos testes
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/
+
+# Relatórios Allure.
+# Ficam de fora do versionamento também por segurança: os resultados registram
+# corpo de requisição e resposta, o que inclui tokens de autenticação emitidos
+# durante a execução.
 allure-results/
 allure-report/
-screenshots/
+
+# Ferramentas locais
+.claude/
