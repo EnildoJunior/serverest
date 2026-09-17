@@ -1,0 +1,57 @@
+name: Testes automatizados
+
+# Roda a cada push e em todo pull request aberto para a main, garantindo que
+# nenhuma alteração chegue ao branch principal sem a suíte ter passado.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  testes:
+    name: Suíte E2E e de API
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Obter o código
+        uses: actions/checkout@v4
+
+      - name: Preparar o Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Executa antes da instalação: depende apenas do Node, e falhar aqui
+      # evita gastar tempo subindo o navegador com a especificação divergente.
+      - name: Verificar rastreabilidade entre BDD e testes
+        run: npm run verificar:bdd
+
+      # A action oficial cuida do cache do binário do Cypress entre execuções.
+      - name: Executar a suíte
+        uses: cypress-io/github-action@v6
+        with:
+          command: npm test
+
+      - name: Publicar o relatório
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-de-testes
+          path: cypress/reports/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      # Em caso de falha o Cypress grava o print do momento do erro;
+      # nos cenários que passam, a evidência é capturada ao fim de cada teste.
+      - name: Publicar as evidências
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencias
+          path: cypress/screenshots/
+          retention-days: 7
+          if-no-files-found: ignore

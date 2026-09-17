@@ -5,15 +5,16 @@ node_modules/
 # Nunca versionado: é o arquivo destinado a credenciais e a ajustes de ambiente.
 cypress.env.json
 
-# Artefatos gerados pela execução dos testes
+# Evidências e artefatos gerados pela execução dos testes
 cypress/screenshots/
 cypress/videos/
 cypress/downloads/
 
-# Relatórios Allure.
+# Relatórios (mochawesome e Allure).
 # Ficam de fora do versionamento também por segurança: os resultados registram
-# corpo de requisição e resposta, o que inclui tokens de autenticação emitidos
-# durante a execução.
+# corpo de requisição e resposta, o que inclui tokens emitidos na execução.
+cypress/reports/
+mochawesome-report/
 allure-results/
 allure-report/
 

@@ -1,14 +1,19 @@
 {
+  "name": "desafio-automacao-serverest",
+  "version": "1.0.0",
+  "description": "Suite de testes automatizados E2E e de API para a plataforma ServeRest",
+  "private": true,
   "scripts": {
-    "cy:run": "node scripts/cypress.js run",
     "cy:open": "node scripts/cypress.js open",
-    "allure:generate": "allure generate allure-results --clean -o allure-report",
-    "allure:open": "allure open allure-report",
-    "test": "node scripts/cypress.js run && allure generate allure-results --clean -o allure-report"
+    "cy:run": "node scripts/cypress.js run",
+    "clean:reports": "node -e \"require('fs').rmSync('cypress/reports',{recursive:true,force:true})\"",
+    "verificar:bdd": "node scripts/verificar-rastreabilidade.js",
+    "pretest": "npm run clean:reports",
+    "test": "node scripts/cypress.js run"
   },
   "devDependencies": {
-    "allure-commandline": "^2.41.0",
-    "allure-cypress": "^3.10.2",
-    "cypress": "^15.21.0"
+    "cypress": "^15.21.0",
+    "cypress-mochawesome-reporter": "^5.0.0",
+    "mochawesome": "^8.1.1"
   }
 }
